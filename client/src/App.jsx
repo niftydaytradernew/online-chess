@@ -12,7 +12,6 @@ function App() {
 
   useEffect(() => {
     socket.on("playerColor", (color) => {
-      console.log("Player color:", color);
       setPlayerColor(color);
     });
 
@@ -21,7 +20,6 @@ function App() {
     });
 
     socket.on("gameState", ({ fen }) => {
-      console.log("Game state:", fen);
       setFen(fen);
     });
 
@@ -33,18 +31,13 @@ function App() {
   }, []);
 
   const joinRoom = () => {
-    if (!roomId.trim()) {
-      alert("Enter a room ID");
-      return;
-    }
+    if (!roomId.trim()) return;
 
     socket.emit("joinRoom", roomId);
     setJoined(true);
   };
 
   const onDrop = (sourceSquare, targetSquare) => {
-    alert(`Move: ${sourceSquare} -> ${targetSquare}`);
-
     socket.emit("move", {
       roomId,
       move: {
@@ -67,15 +60,14 @@ function App() {
         padding: "20px",
       }}
     >
-      <h1>ONLINE CHESS TEST 123</h1>
+      <h1>Online Chess</h1>
 
       {!joined ? (
         <>
           <input
-            type="text"
-            placeholder="Enter Room ID"
             value={roomId}
             onChange={(e) => setRoomId(e.target.value)}
+            placeholder="Enter Room ID"
             style={{
               padding: "10px",
               width: "250px",
@@ -83,13 +75,7 @@ function App() {
             }}
           />
 
-          <button
-            onClick={joinRoom}
-            style={{
-              padding: "10px 20px",
-              cursor: "pointer",
-            }}
-          >
+          <button onClick={joinRoom}>
             Join Room
           </button>
 
@@ -100,36 +86,16 @@ function App() {
       ) : (
         <>
           <h3>Room: {roomId}</h3>
-          <h3>You are: {playerColor || "Waiting..."}</h3>
+          <h3>You are: {playerColor}</h3>
 
-          <div
-            style={{
-              width: "600px",
-              maxWidth: "100%",
-              margin: "0 auto",
-            }}
-          >
+          <div style={{ width: "600px", margin: "0 auto" }}>
             <Chessboard
-  id="OnlineChessBoard"
-  position={fen}
-  boardOrientation={
-    playerColor === "black" ? "black" : "white"
-  }
-  onPieceDrop={(sourceSquare, targetSquare) => {
-    alert(`DROP ${sourceSquare} -> ${targetSquare}`);
-
-    socket.emit("move", {
-      roomId,
-      move: {
-        from: sourceSquare,
-        to: targetSquare,
-        promotion: "q",
-      },
-    });
-
-    return true;
-  }}
-/>
+              position={fen}
+              boardOrientation={
+                playerColor === "black" ? "black" : "white"
+              }
+              onPieceDrop={onDrop}
+            />
           </div>
         </>
       )}
