@@ -110,13 +110,26 @@ function App() {
             }}
           >
             <Chessboard
-              id="OnlineChessBoard"
-              position={fen}
-              boardOrientation={
-                playerColor === "black" ? "black" : "white"
-              }
-              onPieceDrop={onDrop}
-            />
+  id="OnlineChessBoard"
+  position={fen}
+  boardOrientation={
+    playerColor === "black" ? "black" : "white"
+  }
+  onPieceDrop={(sourceSquare, targetSquare) => {
+    alert(`DROP ${sourceSquare} -> ${targetSquare}`);
+
+    socket.emit("move", {
+      roomId,
+      move: {
+        from: sourceSquare,
+        to: targetSquare,
+        promotion: "q",
+      },
+    });
+
+    return true;
+  }}
+/>
           </div>
         </>
       )}
