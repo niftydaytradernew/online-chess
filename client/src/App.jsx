@@ -20,9 +20,9 @@ function App() {
       alert("Room is full");
     });
 
-    socket.on("gameState", (data) => {
-      console.log("Game state:", data);
-      setFen(data.fen);
+    socket.on("gameState", ({ fen }) => {
+      console.log("Game state:", fen);
+      setFen(fen);
     });
 
     return () => {
@@ -43,7 +43,7 @@ function App() {
   };
 
   const onDrop = (sourceSquare, targetSquare) => {
-    console.log("Move:", sourceSquare, targetSquare);
+    alert(`Move: ${sourceSquare} -> ${targetSquare}`);
 
     socket.emit("move", {
       roomId,
@@ -102,7 +102,13 @@ function App() {
           <h3>Room: {roomId}</h3>
           <h3>You are: {playerColor || "Waiting..."}</h3>
 
-          <div style={{ width: "600px", maxWidth: "100%", margin: "0 auto" }}>
+          <div
+            style={{
+              width: "600px",
+              maxWidth: "100%",
+              margin: "0 auto",
+            }}
+          >
             <Chessboard
               id="OnlineChessBoard"
               position={fen}
