@@ -67,7 +67,7 @@ function App() {
         padding: "20px",
       }}
     >
-      <h1>Online Chess</h1>
+      <h1>ONLINE CHESS TEST 123</h1>
 
       {!joined ? (
         <>
