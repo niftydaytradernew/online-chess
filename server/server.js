@@ -25,6 +25,8 @@ io.on("connection", (socket) => {
   console.log("Player connected:", socket.id);
 
   socket.on("joinRoom", (roomId) => {
+    console.log("JOIN ROOM:", roomId);
+
     if (!rooms[roomId]) {
       rooms[roomId] = {
         chess: new Chess(),
@@ -39,7 +41,8 @@ io.on("connection", (socket) => {
       return;
     }
 
-    const color = room.players.length === 0 ? "white" : "black";
+    const color =
+      room.players.length === 0 ? "white" : "black";
 
     room.players.push({
       id: socket.id,
@@ -54,24 +57,40 @@ io.on("connection", (socket) => {
       fen: room.chess.fen()
     });
 
-    console.log(`${socket.id} joined room ${roomId} as ${color}`);
+    console.log(
+      `${socket.id} joined ${roomId} as ${color}`
+    );
   });
 
   socket.on("move", ({ roomId, move }) => {
+    console.log("MOVE RECEIVED:", roomId, move);
+
     const room = rooms[roomId];
 
-    if (!room) return;
+    if (!room) {
+      console.log("ROOM NOT FOUND");
+      return;
+    }
 
     try {
       const result = room.chess.move(move);
 
-      if (!result) return;
+      console.log("MOVE RESULT:", result);
+
+      if (!result) {
+        console.log("INVALID MOVE");
+        return;
+      }
+
+      const fen = room.chess.fen();
+
+      console.log("NEW FEN:", fen);
 
       io.to(roomId).emit("gameState", {
-        fen: room.chess.fen()
+        fen
       });
     } catch (err) {
-      console.log(err);
+      console.log("MOVE ERROR:", err);
     }
   });
 

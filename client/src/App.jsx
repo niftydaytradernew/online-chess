@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { Chess } from "chess.js";
 import { Chessboard } from "react-chessboard";
 import { io } from "socket.io-client";
 
@@ -9,10 +8,11 @@ function App() {
   const [roomId, setRoomId] = useState("");
   const [joined, setJoined] = useState(false);
   const [playerColor, setPlayerColor] = useState("");
-  const [game, setGame] = useState(new Chess());
+  const [fen, setFen] = useState("start");
 
   useEffect(() => {
     socket.on("playerColor", (color) => {
+      console.log("Player color:", color);
       setPlayerColor(color);
     });
 
@@ -20,9 +20,9 @@ function App() {
       alert("Room is full");
     });
 
-    socket.on("gameState", ({ fen }) => {
-      const chess = new Chess(fen);
-      setGame(chess);
+    socket.on("gameState", (data) => {
+      console.log("Game state:", data);
+      setFen(data.fen);
     });
 
     return () => {
@@ -33,48 +33,38 @@ function App() {
   }, []);
 
   const joinRoom = () => {
-    if (!roomId) return;
+    if (!roomId.trim()) {
+      alert("Enter a room ID");
+      return;
+    }
 
     socket.emit("joinRoom", roomId);
     setJoined(true);
   };
 
   const onDrop = (sourceSquare, targetSquare) => {
-    const chess = new Chess(game.fen());
+    console.log("Move:", sourceSquare, targetSquare);
 
-    try {
-      const move = chess.move({
+    socket.emit("move", {
+      roomId,
+      move: {
         from: sourceSquare,
         to: targetSquare,
         promotion: "q",
-      });
+      },
+    });
 
-      if (!move) return false;
-
-      setGame(chess);
-
-      socket.emit("move", {
-        roomId,
-        move: {
-          from: sourceSquare,
-          to: targetSquare,
-          promotion: "q",
-        },
-      });
-
-      return true;
-    } catch {
-      return false;
-    }
+    return true;
   };
 
   return (
     <div
       style={{
         maxWidth: "700px",
-        margin: "30px auto",
+        margin: "20px auto",
         textAlign: "center",
         fontFamily: "Arial",
+        padding: "20px",
       }}
     >
       <h1>Online Chess</h1>
@@ -82,9 +72,10 @@ function App() {
       {!joined ? (
         <>
           <input
+            type="text"
+            placeholder="Enter Room ID"
             value={roomId}
             onChange={(e) => setRoomId(e.target.value)}
-            placeholder="Enter Room ID"
             style={{
               padding: "10px",
               width: "250px",
@@ -92,24 +83,35 @@ function App() {
             }}
           />
 
-          <button onClick={joinRoom}>
+          <button
+            onClick={joinRoom}
+            style={{
+              padding: "10px 20px",
+              cursor: "pointer",
+            }}
+          >
             Join Room
           </button>
 
           <p style={{ marginTop: "20px" }}>
-            Example Room ID: chess123
+            Example room: chess123
           </p>
         </>
       ) : (
         <>
           <h3>Room: {roomId}</h3>
-          <h3>You are: {playerColor}</h3>
+          <h3>You are: {playerColor || "Waiting..."}</h3>
 
-          <Chessboard
-            position={game.fen()}
-            onPieceDrop={onDrop}
-            boardOrientation={playerColor === "black" ? "black" : "white"}
-          />
+          <div style={{ width: "600px", maxWidth: "100%", margin: "0 auto" }}>
+            <Chessboard
+              id="OnlineChessBoard"
+              position={fen}
+              boardOrientation={
+                playerColor === "black" ? "black" : "white"
+              }
+              onPieceDrop={onDrop}
+            />
+          </div>
         </>
       )}
     </div>
